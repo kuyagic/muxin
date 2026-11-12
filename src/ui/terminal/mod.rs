@@ -560,10 +560,17 @@ impl TerminalView {
             cx.notify();
         }
         let ks = &e.keystroke;
-        if ks.modifiers.platform || (!cfg!(target_os = "macos") && ks.modifiers.control && ks.modifiers.shift) {
+        if ks.modifiers.platform
+            || (!cfg!(target_os = "macos")
+                && ((ks.modifiers.control && ks.modifiers.shift)
+                    || (ks.key == "insert" && (ks.modifiers.control || ks.modifiers.shift))))
+        {
             let handled = match ks.key.as_str() {
                 "c" => self.copy(cx),
                 "v" => self.paste(cx),
+                // The classic Insert-key pair: Ctrl+Ins copies, Shift+Ins pastes.
+                "insert" if ks.modifiers.control => self.copy(cx),
+                "insert" => self.paste(cx),
                 _ => false,
             };
             if handled {
